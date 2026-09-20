@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDG Team Draw</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --kraft: #B9A175;
+    --kraft-deep: #96835B;
+    --ticket: #F4EAD3;
+    --ticket-dim: #E9DCBB;
+    --ink: #2A2013;
+    --ink-soft: #6C5C42;
+    --line: #C7AF80;
+    --accent: #19486A; /* Goal 17 partnership blue */
+    --accent-ticket: #E8EEF2;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.10), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(0,0,0,0.10), transparent 55%),
+      var(--kraft);
+    background-blend-mode: normal;
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 0 0 70px;
+  }
+
+  /* subtle paper fiber texture */
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(115deg, rgba(0,0,0,0.025) 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(25deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 4px);
+  }
+
+  .wrap{ position:relative; z-index:1; }
+  :root{ --pad: clamp(24px, 4vw, 64px); }
+
+  /* ---- masthead (ticket-book cover) ---- */
+  header{
+    background: var(--ink);
+    color: var(--ticket);
+    padding: 46px var(--pad) 30px;
+  }
+  .mast-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap: 24px;
+    flex-wrap:wrap;
+  }
+  header h1{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 6vw, 5.2rem);
+    line-height: 0.86;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+  .mast-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: rgba(244,234,211,0.62);
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .mast-note{
+    max-width: 320px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: rgba(244,234,211,0.82);
+    text-align: right;
+  }
+  /* torn paper edge, the one deliberate flourish */
+  .torn{
+    height: 16px;
+    background-color: var(--ink);
+    -webkit-mask-image: linear-gradient(135deg, #000 25%, transparent 25%), linear-gradient(225deg, #000 25%, transparent 25%);
+    mask-image: linear-gradient(135deg, #000 25%, transparent 25%), linear-gradient(225deg, #000 25%, transparent 25%);
+    -webkit-mask-size: 16px 16px;
+    mask-size: 16px 16px;
+    -webkit-mask-position: -8px 0;
+    mask-position: -8px 0;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+  }
+
+  /* ---- setup / dispenser panel ---- */
+  .setup{
+    padding: 26px var(--pad) 6px;
+  }
+  .setup-row{
+    display:grid;
+    grid-template-columns: 1.5fr 0.5fr 0.9fr;
+    gap: 12px;
+    align-items:stretch;
+  }
+  @media (max-width: 720px){
+    .setup-row{ grid-template-columns: 1fr; }
+  }
+
+  .field-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display:block;
+  }
+
+  .folder-btn{
+    width:100%;
+    min-height: 58px;
+    border-radius: 4px;
+    border: 1.5px solid var(--ink);
+    background: var(--ticket);
+    color: var(--ink);
+    padding: 0 16px;
+    font-family:'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    text-align:left;
+  }
+  .folder-btn.loaded{ background: var(--accent); color: var(--accent-ticket); border-color: var(--accent); }
+  .folder-btn:hover{ filter: brightness(0.97); }
+
+  input[type=number]{
+    width:100%;
+    min-height: 58px;
+    border-radius: 4px;
+    background: var(--ticket);
+    border: 1.5px solid var(--ink);
+    color: var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    text-align:center;
+    padding: 0 10px;
+    outline:none;
+  }
+  input[type=number]:focus{ box-shadow: 0 0 0 3px rgba(25,72,106,0.18); }
+
+  .assign-btn{
+    width:100%;
+    min-height: 58px;
+    border: none;
+    border-radius: 4px;
+    background: var(--accent);
+    color: var(--accent-ticket);
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing: 0.06em;
+    font-weight:600;
+    font-size: 14px;
+    text-transform: uppercase;
+    cursor:pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .assign-btn:hover{ background:#123650; }
+  .assign-btn:active{ transform: translateY(1px); }
+  .assign-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .msg{
+    padding: 10px var(--pad) 0;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    min-height: 16px;
+  }
+  .msg.error{ color: #7A2F22; font-weight:600; }
+
+  /* ---- ticket grid ---- */
+  #grid{
+    padding: 18px var(--pad) 0;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+
+  #empty-state{
+    margin: 40px var(--pad) 0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  .ticket{
+    display:flex;
+    background: var(--ticket);
+    border-radius: 3px;
+    box-shadow: 0 2px 0 rgba(42,32,19,0.18), 0 12px 20px -12px rgba(42,32,19,0.55);
+    overflow:hidden;
+    position:relative;
+    opacity:0;
+    transform: scale(0.93) rotate(-1deg);
+  }
+  .ticket.revealed{
+    animation: stamp .38s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  @keyframes stamp{
+    0%{ opacity:0; transform: scale(1.1) rotate(1.5deg); }
+    60%{ opacity:1; transform: scale(0.98) rotate(-0.5deg); }
+    100%{ opacity:1; transform: scale(1) rotate(0deg); }
+  }
+
+  .stub{
+    flex-shrink:0;
+    width: 42px;
+    background: var(--ink);
+    color: var(--ticket);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .stub span{
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .perf{
+    position:absolute;
+    top:0; right:-1px;
+    width: 6px; height:100%;
+    background-image: radial-gradient(circle, var(--ticket) 2.6px, transparent 2.8px);
+    background-size: 100% 13px;
+    background-repeat: repeat-y;
+  }
+
+  .ticket-body{
+    flex:1;
+    min-width:0;
+    padding: 14px 16px 12px;
+    display:flex;
+    flex-direction:column;
+    gap: 6px;
+    position:relative;
+  }
+
+  .serial{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+
+  .goal-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-top: 2px;
+  }
+  .goal-img{
+    width: 58px; height:58px;
+    flex-shrink:0;
+    object-fit: contain;
+    border-radius: 2px;
+  }
+  .goal-num-fallback{
+    width:58px; height:58px;
+    flex-shrink:0;
+    border-radius: 2px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size: 26px;
+    color:#fff;
+  }
+  .goal-name{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.02;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+
+  .stamp{
+    position:absolute;
+    top: 10px; right: 12px;
+    width: 46px; height:46px;
+    border-radius:50%;
+    border: 2px solid;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size: 15px;
+    transform: rotate(-9deg);
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+  }
+
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="mast-row">
+      <div>
+        <h1>SDG&nbsp;draw</h1>
+        <div class="mast-sub">Ticket book · Sustainable Development Goals</div>
+      </div>
+      <p class="mast-note">Load the goal artwork once, set your group count, and create a random SDG ticket for every team.</p>
+    </div>
+  </header>
+  <div class="torn"></div>
+
+  <div class="setup" id="setup">
+    <div class="setup-row">
+      <div>
+        <span class="field-label">Goal artwork</span>
+        <button class="folder-btn" id="folderBtn" type="button">
+          <span>📁</span>
+          <span id="folderBtnText">Select SDG image folder</span>
+        </button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple accept=".jpg,.jpeg">
+      </div>
+      <div>
+        <span class="field-label">Groups</span>
+        <input type="number" id="groupCount" min="1" max="200" value="6">
+      </div>
+      <div>
+        <span class="field-label">&nbsp;</span>
+        <button class="assign-btn" id="assignBtn" disabled>Create tickets</button>
+      </div>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div id="empty-state">No tickets drawn yet — press "Create tickets" to assign a goal to every group.</div>
+  <div id="grid"></div>
+
+</div>
+
+<script>
+const SDG_META = {
+  1:{name:"No poverty", color:"#E5243B"},
+  2:{name:"Zero hunger", color:"#DDA63A"},
+  3:{name:"Good health and well-being", color:"#4C9F38"},
+  4:{name:"Quality education", color:"#C5192D"},
+  5:{name:"Gender equality", color:"#FF3A21"},
+  6:{name:"Clean water and sanitation", color:"#26BDE2"},
+  7:{name:"Affordable and clean energy", color:"#FCC30B"},
+  8:{name:"Decent work and economic growth", color:"#A21942"},
+  9:{name:"Industry, innovation and infrastructure", color:"#FD6925"},
+  10:{name:"Reduced inequalities", color:"#DD1367"},
+  11:{name:"Sustainable cities and communities", color:"#FD9D24"},
+  //12:{name:"Responsible consumption and production", color:"#BF8B2E"},
+  //13:{name:"Climate action", color:"#3F7E44"},
+  //14:{name:"Life below water", color:"#0A97D9"},
+  15:{name:"Life on land", color:"#56C02B"},
+  16:{name:"Peace, justice and strong institutions", color:"#00689D"},
+  17:{name:"Partnerships for the goals", color:"#19486A"}
+};
+
+let sdgImages = [];
+
+const DEFAULT_SDG_IMAGES = Array.from({ length: 17 }, (_, index) => {
+  const number = index + 1;
+
+  if ([12, 13, 14].includes(number)) {
+    return null;
+  }
+
+  const fileName = `E_SDG_PRINT-${String(number).padStart(2, '0')}.jpg`;
+  const meta = SDG_META[number] || {};
+  return {
+    url: `img/${fileName}`,
+    number,
+    name: meta.name || fileName,
+    color: meta.color || '#7A8390'
+  };
+}).filter(Boolean);
+
+const folderBtn = document.getElementById('folderBtn');
+const folderBtnText = document.getElementById('folderBtnText');
+const folderInput = document.getElementById('folderInput');
+const assignBtn = document.getElementById('assignBtn');
+const groupCountInput = document.getElementById('groupCount');
+const msg = document.getElementById('msg');
+const grid = document.getElementById('grid');
+const emptyState = document.getElementById('empty-state');
+
+folderBtn.addEventListener('click', () => folderInput.click());
+
+function loadDefaultImages(){
+  sdgImages = DEFAULT_SDG_IMAGES;
+  folderBtn.classList.add('loaded');
+  folderBtnText.textContent = `${sdgImages.length} images loaded — using default img folder`;
+  assignBtn.disabled = false;
+  setMsg('');
+}
+
+folderInput.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files).filter(f => /\.(jpe?g)$/i.test(f.name));
+
+  if(files.length === 0){
+    setMsg("No .jpg images found in that folder.", true);
+    return;
+  }
+
+  sdgImages = files.map(f => {
+    const nameNoExt = f.name.replace(/\.(jpe?g)$/i, '');
+    const numMatch = nameNoExt.match(/\d{1,2}/);
+    const num = numMatch ? parseInt(numMatch[0], 10) : null;
+    const meta = (num && SDG_META[num]) ? SDG_META[num] : null;
+    return {
+      url: URL.createObjectURL(f),
+      number: num,
+      name: meta ? meta.name : nameNoExt.replace(/[_-]+/g,' ').trim(),
+      color: meta ? meta.color : "#7A8390"
+    };
+  });
+
+  folderBtn.classList.add('loaded');
+  folderBtnText.textContent = `${sdgImages.length} images loaded`;
+  assignBtn.disabled = false;
+  setMsg("");
+});
+
+loadDefaultImages();
+
+function setMsg(text, isError){
+  msg.textContent = text;
+  msg.className = 'msg' + (isError ? ' error' : '');
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildAssignmentPool(images, n){
+  let pool = [];
+  while(pool.length < n){
+    pool = pool.concat(shuffle(images));
+  }
+  return shuffle(pool.slice(0, n));
+}
+
+assignBtn.addEventListener('click', () => {
+  const n = parseInt(groupCountInput.value, 10);
+
+  if(!n || n < 1){
+    setMsg("Enter a number of groups greater than 0.", true);
+    return;
+  }
+  if(sdgImages.length === 0){
+    setMsg("Load your SDG image folder first.", true);
+    return;
+  }
+  setMsg(sdgImages.length < n
+    ? `Only ${sdgImages.length} images loaded — some goals will repeat.`
+    : "");
+
+  const assignments = buildAssignmentPool(sdgImages, n);
+  renderGrid(assignments);
+});
+
+function renderGrid(assignments){
+  emptyState.style.display = 'none';
+  grid.innerHTML = '';
+
+  assignments.forEach((sdg, i) => {
+    const ticket = document.createElement('div');
+    ticket.className = 'ticket';
+
+    const imgOrFallback = sdg.url
+      ? `<img class="goal-img" src="${sdg.url}" alt="${sdg.name}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'goal-num-fallback',style:'background:${sdg.color}',textContent:'${sdg.number || i+1}'}))">`
+      : `<div class="goal-num-fallback" style="background:${sdg.color};">${sdg.number || i + 1}</div>`;
+
+    ticket.innerHTML = `
+      <div class="stub"><span>Group ${i + 1}</span><div class="perf"></div></div>
+      <div class="ticket-body">
+        <div class="serial">SDG-${String(sdg.number || i+1).padStart(2,'0')} · GROUP ${String(i+1).padStart(2,'0')}</div>
+        <div class="goal-row">
+          ${imgOrFallback}
+          <div class="goal-name">Goal ${sdg.number || i + 1}<br>${sdg.name}</div>
+        </div>
+        <div class="stamp" style="border-color:${sdg.color}; color:${sdg.color};">#${sdg.number || i+1}</div>
+      </div>
+    `;
+    grid.appendChild(ticket);
+    setTimeout(() => ticket.classList.add('revealed'), 90 + i * 55);
+  });
+}
+</script>
+</body>
+</html>
