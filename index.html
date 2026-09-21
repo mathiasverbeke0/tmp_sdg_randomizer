@@ -319,7 +319,7 @@
     <div class="mast-row">
       <div>
         <h1>SDG&nbsp;draw</h1>
-        <div class="mast-sub">Ticket book · Sustainable Development Goals</div>
+        <div class="mast-sub">Group Work Sustainable Development Goals</div>
       </div>
       <p class="mast-note">Load the goal artwork once, set your group count, and create a random SDG ticket for every team.</p>
     </div>
@@ -369,7 +369,7 @@ const SDG_META = {
   //12:{name:"Responsible consumption and production", color:"#BF8B2E"},
   //13:{name:"Climate action", color:"#3F7E44"},
   //14:{name:"Life below water", color:"#0A97D9"},
-  15:{name:"Life on land", color:"#56C02B"},
+  //15:{name:"Life on land", color:"#56C02B"},
   16:{name:"Peace, justice and strong institutions", color:"#00689D"},
   17:{name:"Partnerships for the goals", color:"#19486A"}
 };
@@ -379,7 +379,7 @@ let sdgImages = [];
 const DEFAULT_SDG_IMAGES = Array.from({ length: 17 }, (_, index) => {
   const number = index + 1;
 
-  if ([12, 13, 14].includes(number)) {
+  if ([12, 13, 14, 15].includes(number)) {
     return null;
   }
 
